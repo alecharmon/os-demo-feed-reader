@@ -15,7 +15,9 @@ export const exampleRouter = createTRPCRouter({
       };
     }),
 
-  getAll: publicProcedure.query(({ ctx }) => {
+  getAll: publicProcedure.query(async ({ ctx }) => {
+    const x = await ctx.prisma.example.findFirst();
+    
     return ctx.prisma.example.findMany();
   }),
 
