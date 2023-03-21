@@ -50,6 +50,7 @@ model User {
     email         String?   @unique
     emailVerified DateTime?
     image         String?
+    osUserId      String?
     accounts      Account[]
     sessions      Session[]
     feeds         rssFeed[]

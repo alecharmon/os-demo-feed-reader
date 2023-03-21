@@ -1,9 +1,12 @@
+"use client";
+
 import { type NextPage } from "next";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import OneSignalReact from "react-onesignal";
 import AuthLoginLogOut from "~/componets/AuthLoginLogOut";
+import { env } from "~/env.mjs";
 import { api } from "~/utils/api";
 
 const Home: NextPage = () => {
@@ -16,33 +19,15 @@ const Home: NextPage = () => {
     }
   }, [router, sessionData]);
 
-  const [oneSignalInit, setOneSignalInit] = useState(true);
-
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    if (oneSignalInit && sessionData?.user != undefined) {
-      setOneSignalInit(false);
-      OneSignalReact.init({
-        appId: "d6397be5-4c37-4fee-9f61-a5ea327c2c3d",
-        notifyButton: {
-          enable: true,
-        },
-
-        allowLocalhostAsSecureOrigin: true,
-      })
-        .then(() => {
-          OneSignalReact.setExternalUserId(sessionData.user.id).catch((e) => {
-            throw e;
-          });
-          OneSignalReact.showSlidedownPrompt().catch((e) => {
-            throw e;
-          });
-        })
-        .catch((e) => {
-          throw e;
-        });
-    }
+  OneSignalReact.showSlidedownPrompt({ force: true }).catch((e) => {
+    console.log(e);
   });
+
+  useEffect(() => {
+    OneSignalReact.setExternalUserId(sessionData?.user.id).catch((e) =>
+      console.log(e)
+    );
+  }, []);
 
   const [newRss, setNewRss] = useState<string>("");
   const createFeedMutation = api.rssFeed.create.useMutation({
@@ -53,6 +38,7 @@ const Home: NextPage = () => {
   const allFeedsData = api.rssFeed.getAll.useQuery();
 
   const handleCreate = () => {
+    debugger;
     createFeedMutation.mutate({ url: newRss });
   };
 
@@ -82,7 +68,7 @@ const Home: NextPage = () => {
                 onClick={handleCreate}
                 className="btn-primary btn-active btn"
               >
-                Button
+                Add
               </button>
             </div>
           </div>
@@ -92,6 +78,9 @@ const Home: NextPage = () => {
                 <tr>
                   <th></th>
                   <th>Url</th>
+                  <th>created at</th>
+                  <th>last updated at</th>
+                  <th>last notified at</th>
                 </tr>
               </thead>
               <tbody>
@@ -100,6 +89,11 @@ const Home: NextPage = () => {
                     <tr key={usersFeed.id}>
                       <th>{index + 1}</th>
                       <td>{usersFeed.url}</td>
+                      <td>{usersFeed.createdAt.toLocaleString()}</td>
+                      <td>{usersFeed.updatedAt.toLocaleString()}</td>
+                      <td>
+                        {usersFeed.notifiedAt?.toLocaleString() ?? "never"}
+                      </td>
                     </tr>
                   );
                 })}
